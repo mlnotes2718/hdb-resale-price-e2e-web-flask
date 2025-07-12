@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDB Price Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        select, input {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .predict-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            font-size: 1.3em;
+            font-weight: 600;
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .error {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        }
+        
+        .info-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 HDB Price Predictor</h1>
+        
+        <form id="predictionForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="town">Town</label>
+                    <select id="town" name="town" required>
+                        <option value="">Select Town</option>
+                        <option value="ANG MO KIO">Ang Mo Kio</option>
+                        <option value="BEDOK">Bedok</option>
+                        <option value="BISHAN">Bishan</option>
+                        <option value="BUKIT BATOK">Bukit Batok</option>
+                        <option value="BUKIT MERAH">Bukit Merah</option>
+                        <option value="BUKIT PANJANG">Bukit Panjang</option>
+                        <option value="BUKIT TIMAH">Bukit Timah</option>
+                        <option value="CENTRAL AREA">Central Area</option>
+                        <option value="CHOA CHU KANG">Choa Chu Kang</option>
+                        <option value="CLEMENTI">Clementi</option>
+                        <option value="GEYLANG">Geylang</option>
+                        <option value="HOUGANG">Hougang</option>
+                        <option value="JURONG EAST">Jurong East</option>
+                        <option value="JURONG WEST">Jurong West</option>
+                        <option value="KALLANG/WHAMPOA">Kallang/Whampoa</option>
+                        <option value="MARINE PARADE">Marine Parade</option>
+                        <option value="PASIR RIS">Pasir Ris</option>
+                        <option value="PUNGGOL">Punggol</option>
+                        <option value="QUEENSTOWN">Queenstown</option>
+                        <option value="SEMBAWANG">Sembawang</option>
+                        <option value="SENGKANG">Sengkang</option>
+                        <option value="SERANGOON">Serangoon</option>
+                        <option value="TAMPINES">Tampines</option>
+                        <option value="TOA PAYOH">Toa Payoh</option>
+                        <option value="WOODLANDS">Woodlands</option>
+                        <option value="YISHUN">Yishun</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="flat_type">Flat Type</label>
+                    <select id="flat_type" name="flat_type" required>
+                        <option value="">Select Flat Type</option>
+                        <option value="1 ROOM">1 Room</option>
+                        <option value="2 ROOM">2 Room</option>
+                        <option value="3 ROOM">3 Room</option>
+                        <option value="4 ROOM">4 Room</option>
+                        <option value="5 ROOM">5 Room</option>
+                        <option value="EXECUTIVE">Executive</option>
+                        <option value="MULTI-GENERATION">Multi-Generation</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="storey_range">Storey Range</label>
+                    <input type="number" id="storey_range" name="storey_range" 
+                           min="1" max="50" value="10" required>
+                    <div class="info-text">Enter the storey number (1-50)</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="floor_area_sqm">Floor Area (sqm)</label>
+                    <input type="number" id="floor_area_sqm" name="floor_area_sqm" 
+                           min="20" max="200" step="0.1" value="90" required>
+                    <div class="info-text">Typical range: 30-150 sqm</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="flat_model">Flat Model</label>
+                    <select id="flat_model" name="flat_model" required>
+                        <option value="">Select Flat Model</option>
+                        <option value="Improved">Improved</option>
+                        <option value="New Generation">New Generation</option>
+                        <option value="Model A">Model A</option>
+                        <option value="Model A-Maisonette">Model A-Maisonette</option>
+                        <option value="Simplified">Simplified</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Apartment">Apartment</option>
+                        <option value="Maisonette">Maisonette</option>
+                        <option value="Terrace">Terrace</option>
+                        <option value="DBSS">DBSS</option>
+                        <option value="Type S1">Type S1</option>
+                        <option value="Type S2">Type S2</option>
+                        <option value="Premium Apartment">Premium Apartment</option>
+                        <option value="Adjoined flat">Adjoined flat</option>
+                        <option value="Premium Maisonette">Premium Maisonette</option>
+                        <option value="Multi Generation">Multi Generation</option>
+                        <option value="Premium Apartment Loft">Premium Apartment Loft</option>
+                        <option value="Improved-Maisonette">Improved-Maisonette</option>
+                        <option value="Model A2">Model A2</option>
+                        <option value="2-room">2-room</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="transac_year">Transaction Year</label>
+                    <input type="number" id="transac_year" name="transac_year" 
+                           min="2000" max="2030" value="2025" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="transac_month">Transaction Month</label>
+                    <select id="transac_month" name="transac_month" required>
+                        <option value="">Select Month</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7" selected>July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="remaining_lease_by_months">Remaining Lease (Months)</label>
+                    <select id="remaining_lease_by_months" name="remaining_lease_by_months" required>
+                        <option value="">Select Remaining Lease</option>
+                        <option value="120">10 years (120 months)</option>
+                        <option value="180">15 years (180 months)</option>
+                        <option value="240">20 years (240 months)</option>
+                        <option value="300">25 years (300 months)</option>
+                        <option value="360">30 years (360 months)</option>
+                        <option value="420">35 years (420 months)</option>
+                        <option value="480">40 years (480 months)</option>
+                        <option value="540">45 years (540 months)</option>
+                        <option value="600" selected>50 years (600 months)</option>
+                        <option value="660">55 years (660 months)</option>
+                        <option value="720">60 years (720 months)</option>
+                        <option value="780">65 years (780 months)</option>
+                        <option value="840">70 years (840 months)</option>
+                        <option value="900">75 years (900 months)</option>
+                        <option value="960">80 years (960 months)</option>
+                        <option value="1020">85 years (1020 months)</option>
+                        <option value="1080">90 years (1080 months)</option>
+                        <option value="1140">95 years (1140 months)</option>
+                    </select>
+                    <div class="info-text">HDB flats have 99-year leases</div>
+                </div>
+            </div>
+            
+            <button type="submit" class="predict-btn">Predict Price</button>
+        </form>
+        
+        <div id="result" class="result"></div>
+    </div>
+    
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            
+            // Get form data
+            const formData = new FormData(this);
+            const inputData = {};
+            
+            // Convert form data to object
+            for (let [key, value] of formData.entries()) {
+                if (key === 'floor_area_sqm') {
+                    inputData[key] = parseFloat(value);
+                } else if (key === 'storey_range' || key === 'transac_year' || key === 'transac_month' || key === 'remaining_lease_by_months') {
+                    inputData[key] = parseInt(value);
+                } else {
+                    inputData[key] = value;
+                }
+            }
+            
+            // Validate all fields are filled
+            const requiredFields = ['town', 'flat_type', 'storey_range', 'floor_area_sqm', 'flat_model', 'transac_year', 'transac_month', 'remaining_lease_by_months'];
+            const missingFields = requiredFields.filter(field => !inputData[field] && inputData[field] !== 0);
+            
+            if (missingFields.length > 0) {
+                resultDiv.innerHTML = '❌ Please fill in all required fields';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            // Show loading state
+            resultDiv.innerHTML = '⏳ Making prediction...';
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+            
+            // Call Flask API for prediction
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(inputData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.innerHTML = '❌ Error: ' + data.error;
+                    resultDiv.className = 'result error';
+                } else {
+                    resultDiv.innerHTML = `
+                        <div>🎯 Predicted HDB Price</div>
+                        <div style="font-size: 1.8em; margin: 10px 0;">S${data.prediction.toLocaleString()}</div>
+                        <div style="font-size: 0.9em; opacity: 0.8;">Based on your input parameters</div>
+                    `;
+                    resultDiv.className = 'result';
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '❌ Error connecting to server: ' + error.message;
+                resultDiv.className = 'result error';
+            });
+        });
+        
+        // Example Flask API endpoint structure:
+        /*
+        Your Flask app should have this structure:
+        
+        @app.route('/predict', methods=['POST'])
+        def predict():
+            try:
+                data = request.json
+                
+                # Extract features in the order your model expects
+                features = [[
+                    data['town'],
+                    data['flat_type'],
+                    data['storey_range'],
+                    data['floor_area_sqm'],
+                    data['flat_model'],
+                    data['transac_year'],
+                    data['transac_month'],
+                    data['remaining_lease_by_months']
+                ]]
+                
+                # Make prediction using your loaded_model
+                prediction = loaded_model.predict(features)[0]
+                
+                return jsonify({'prediction': float(prediction)})
+            
+            except Exception as e:
+                return jsonify({'error': str(e)}), 400
+        */
+    </script>
+</body>
+</html>
