@@ -2,27 +2,34 @@ from flask import Flask, request, jsonify, render_template
 import joblib  # Changed from pickle to joblib
 import pandas as pd
 import numpy as np
+import logging
 
 app = Flask(__name__)
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Load your model once when the server starts
 try:
     loaded_model = joblib.load('model/hdb_resale_best_model.joblib')  # Updated path and method
-    print("Model loaded successfully!")
+    logging.info("Model loaded successfully!")
     
     # Debug: Check what the model expects
-    print(f"Model type: {type(loaded_model)}")
+    logging.info(f"Model type: {type(loaded_model)}")
     if hasattr(loaded_model, 'feature_names_in_'):
-        print(f"Expected features: {loaded_model.feature_names_in_}")
+        logging.info(f"Expected features: {loaded_model.feature_names_in_}")
         
 except Exception as e:
-    print(f"Error loading model: {e}")
+    logging.error(f"Error loading model: {e}")
     loaded_model = None
 
+# Define routes
+# This route serves the main page
 @app.route('/')
 def index():
     return render_template('index.html')
 
+# This route handles the prediction requests
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -30,7 +37,7 @@ def predict():
             return jsonify({'error': 'Model not loaded'}), 500
             
         data = request.json
-        print(f"Received data: {data}")  # Debug print
+        logging.info(f"Received data: {data}")  # Debug print
 
         if data is None:
             return jsonify({'error': 'No JSON data received'}), 400
@@ -47,18 +54,18 @@ def predict():
             'remaining_lease_by_months': data['remaining_lease_by_months']
         }])
         
-        print(f"DataFrame columns: {df.columns.tolist()}")  # Debug print
-        print(f"DataFrame shape: {df.shape}")  # Debug print
-        print(f"DataFrame dtypes: {df.dtypes}")  # Debug print
+        logging.info(f"DataFrame columns: {df.columns.tolist()}")  # Debug print
+        logging.info(f"DataFrame shape: {df.shape}")  # Debug print
+        logging.info(f"DataFrame dtypes: {df.dtypes}")  # Debug print
         
         # Make prediction
         prediction = loaded_model.predict(df)[0]
-        print(f"Prediction: {prediction}")  # Debug print
+        logging.info(f"Prediction: {prediction}")  # Debug print
         
         return jsonify({'prediction': float(prediction)})
     
     except Exception as e:
-        print(f"Error: {e}")  # Debug print
+        logging.error(f"Error: {e}")  # Debug print
         return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
